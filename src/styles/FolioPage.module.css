@@ -1,0 +1,86 @@
+.page {
+  background-color: var(--white);
+  box-shadow: 0 60px 120px rgba(0, 0, 0, 0.6);
+  margin: 0 auto; /* Centrado horizontal */
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.8s;
+  border-radius: 4px;
+}
+
+.page:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 80px 160px rgba(0, 0, 0, 0.8);
+}
+
+.a4 {
+  width: 210mm;
+  height: 297mm;
+}
+
+.oficio {
+  width: 216mm;
+  height: 330mm;
+}
+
+.folioContainer {
+  position: absolute;
+  top: 3mm;
+  right: 3mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.numberVertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.numberVertical span {
+  display: block;
+  height: 10.5pt; /* Espaciado respirable */
+}
+
+.lastDigit {
+  border-bottom: 1pt solid black; /* Línea más fina */
+  width: 100%;
+  text-align: center;
+  height: 12pt !important;
+  margin-bottom: 4px; /* Separación de bloque */
+}
+
+.words {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-transform: none;
+  margin-top: 2px;
+}
+
+.words span {
+  display: block;
+  height: 10.5pt;
+}
+
+.space {
+  height: 10.5pt !important;
+  display: block;
+}
+
+@media print {
+  .page {
+    margin: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always;
+  }
+}

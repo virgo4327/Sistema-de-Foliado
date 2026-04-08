@@ -1,0 +1,75 @@
+* {
+  box-sizing: border-box; /* Crucial para alineación exacta */
+}
+
+:root {
+  --bg-primary: #472825; /* Café profundo */
+  --bg-panel: rgba(150, 120, 111, 0.75); /* Marrón cálido glass */
+  --accent-color: #D3AB80; /* Bronce/Ocre */
+  --accent-glow: rgba(211, 171, 128, 0.2);
+  --text-color: #FFF4E2; /* Crema suave */
+  --text-dim: #FDE4BC;
+  --white: #FFFFFF;
+  --page-width: 210mm;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 50% -20%, #633935 0%, var(--bg-primary) 80%),
+    linear-gradient(rgba(211, 171, 128, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(211, 171, 128, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px, 30px 30px;
+  color: var(--text-color);
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+  overflow-x: hidden;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}
+
+/* Estilos de impresión */
+@media print {
+  body {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  @page {
+    margin: 0;
+  }
+}

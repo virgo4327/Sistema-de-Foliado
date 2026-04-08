@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEMO: Sistema de Foliado Automático</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box; /* Crucial para alineación exacta */
+        }
+
+        :root {
+            --bg-primary: #472825; /* Café profundo */
+            --bg-panel: rgba(150, 120, 111, 0.75); /* Marrón cálido glass */
+            --border-glow: rgba(211, 171, 128, 0.2);
+            --accent-primary: #D3AB80; /* Bronce/Ocre */
+            --accent-secondary: #96786F;
+            --text-main: #FFF4E2; /* Crema suave */
+            --text-dim: #FDE4BC;
+            --white: #FFFFFF;
+            --page-width: 210mm;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 50% -20%, #633935 0%, var(--bg-primary) 80%),
+                linear-gradient(rgba(211, 171, 128, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(211, 171, 128, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .config-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(25px) saturate(160%);
+            -webkit-backdrop-filter: blur(25px) saturate(160%);
+            border: 1px solid rgba(211, 171, 128, 0.15);
+            border-radius: 32px;
+            padding: 45px;
+            width: var(--page-width);
+            max-width: 95%; /* Seguridad para móviles */
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 50px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #FFF4E2 0%, #D3AB80 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label { 
+            font-size: 0.7rem; 
+            color: var(--text-dim); 
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        input, select {
+            background: rgba(5, 31, 32, 0.4);
+            border: 1px solid rgba(140, 183, 155, 0.1);
+            color: var(--text-main);
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Ocultar flechas nativas */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+        input[type=number] { 
+            -moz-appearance: textfield; 
+            appearance: textfield;
+        }
+
+        .number-control {
+            display: flex;
+            align-items: center;
+            background: rgba(40, 20, 20, 0.4);
+            border: 1px solid rgba(211, 171, 128, 0.2);
+            border-radius: 16px;
+            padding: 6px;
+            transition: all 0.3s;
+        }
+
+        .number-control:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 30px rgba(211, 171, 128, 0.15);
+            background: rgba(40, 20, 20, 0.6);
+        }
+
+        .number-control input {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            text-align: center;
+            width: 100%;
+            padding: 12px 5px !important;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-weight: 600;
+            outline: none;
+            font-family: 'Outfit', sans-serif;
+            transform: none !important;
+        }
+
+        .step-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(211, 171, 128, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--accent-primary);
+            transition: all 0.3s;
+            user-select: none;
+            font-weight: bold;
+            font-size: 1.4rem;
+        }
+
+        .step-btn:hover {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: scale(1.05);
+        }
+
+        .step-btn:active {
+            transform: scale(0.95);
+        }
+
+        .actions { display: flex; gap: 20px; flex-wrap: wrap; }
+
+        button {
+            padding: 20px 40px;
+            border-radius: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-gen { 
+            background: linear-gradient(135deg, #D3AB80 0%, #96786F 100%);
+            color: #472825; 
+            flex: 2;
+            box-shadow: 0 15px 35px rgba(211, 171, 128, 0.25);
+        }
+
+        .btn-gen:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 25px 50px rgba(211, 171, 128, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-print { 
+            background: rgba(255, 244, 226, 0.05); 
+            border: 1px solid rgba(211, 171, 128, 0.3);
+            color: var(--text-main); 
+            flex: 1;
+        }
+
+        .btn-print:hover { 
+            background: rgba(211, 171, 128, 0.15); 
+            border-color: var(--accent-primary);
+            transform: translateY(-3px);
+        }
+
+        /* HOJA DE FOLIO */
+        .preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 80px;
+            width: 100%;
+            padding-bottom: 100px;
+        }
+
+        .page {
+            background: white;
+            box-shadow: 0 60px 120px rgba(0,0,0,0.6);
+            position: relative;
+            color: black;
+            border-radius: 4px;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.8s;
+            margin: 0 auto; /* Forzar centrado horizontal */
+        }
+
+        .page:hover { 
+            transform: translateY(-10px) scale(1.02); 
+            box-shadow: 0 80px 160px rgba(0,0,0,0.8);
+        }
+
+        .a4 { width: var(--page-width); height: 297mm; }
+        .oficio { width: 216mm; height: 330mm; }
+
+        .folio-container {
+            position: absolute;
+            top: 2mm;
+            right: 2mm; /* Margen mínimo */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10pt;
+            color: black;
+            font-weight: 500;
+        }
+
+        .number-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .number-vertical span {
+            display: block;
+            height: 10.5pt; /* Más espacio para respirar */
+        }
+
+        .last-digit {
+            border-bottom: 1pt solid black; /* Línea más fina y elegante */
+            width: 100%;
+            text-align: center;
+            height: 12pt !important;
+            margin-bottom: 4px; /* Separación del bloque de letras */
+        }
+
+        .words {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-transform: none;
+            margin-top: 2px;
+        }
+
+        .words span {
+            display: block;
+            height: 10.5pt; /* Más espacio para respirar */
+        }
+
+        @media print {
+            .config-panel { display: none !important; }
+            body { padding: 0; margin: 0; background: none; }
+            @page { margin: 0; size: auto; }
+            .preview { margin: 0 !important; padding: 0 !important; display: block !important; gap: 0 !important; }
+            .page { margin: 0 !important; box-shadow: none !important; page-break-after: always; transform: none !important; border-radius: 0; border: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function numberToWords(n) {
+            if (n === 0) return 'Cero';
+            const units = ['', 'Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve'];
+            const teens = ['Diez', 'Once', 'Doce', 'Trece', 'Catorce', 'Quince', 'Dieciséis', 'Diecisiete', 'Dieciocho', 'Diecinueve'];
+            const tens = ['', '', 'Veinte', 'Treinta', 'Cuarenta', 'Cincuenta', 'Sesenta', 'Setenta', 'Ochenta', 'Noventa'];
+            const hundreds = ['', 'Ciento', 'Doscientos', 'Trescientos', 'Cuatrocientos', 'Quinientos', 'Seiscientos', 'Setecientos', 'Ochocientos', 'Novecientos'];
+
+            const convertGroup = (num) => {
+                let res = '';
+                if (num === 100) return 'Cien';
+                if (num >= 100) { res += hundreds[Math.floor(num/100)] + ' '; num %= 100; }
+                if (num >= 20) {
+                    if (num === 20) return res + 'Veinte';
+                    if (num < 30) res += 'Veinti' + units[num%10].toLowerCase();
+                    else res += tens[Math.floor(num/10)] + (num%10 !== 0 ? ' y ' + units[num%10] : '');
+                } else if (num >= 10) res += teens[num-10];
+                else if (num > 0) res += units[num];
+                return res.trim();
+            };
+
+            if (n === 1000000) return 'Un Millón';
+            let final = '';
+            if (n >= 1000) {
+                const k = Math.floor(n/1000);
+                final += (k === 1 ? 'Mil' : convertGroup(k) + ' Mil') + ' ';
+                n %= 1000;
+            }
+            if (n > 0) final += convertGroup(n);
+            return final.trim();
+        }
+
+        const FolioPage = ({ number, pageSize }) => {
+            const formattedNumber = number.toString().padStart(2, '0');
+            const wordsRaw = numberToWords(number);
+            // Solo primera letra Mayúscula
+            const words = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
+            const digits = formattedNumber.split('');
+
+            return (
+                <div className={`page ${pageSize.toLowerCase()}`}>
+                    <div className="folio-container">
+                        <div className="number-vertical">
+                            {digits.map((d, i) => (
+                                <span key={i} className={i === digits.length - 1 ? 'last-digit' : ''}>
+                                    {d}
+                                </span>
+                            ))}
+                        </div>
+                        <div className="words">
+                            {words.split('').map((c, i) => (
+                                <span key={i}>{c === ' ' ? '\u00A0' : c}</span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [start, setStart] = useState(1);
+            const [qty, setQty] = useState(1);
+            const [size, setSize] = useState('A4');
+            const [order, setOrder] = useState('asc');
+            const [pages, setPages] = useState([]);
+
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                    <div className="config-panel">
+                        <div className="header">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            <h2 style={{margin:0}}>Sistema de Foliado</h2>
+                        </div>
+                        <div className="form-grid">
+                            <div className="input-group">
+                                <label>Inicio</label>
+                                <div className="number-control">
+                                    <div className="step-btn" onClick={() => setStart(Math.max(1, start - 1))}>−</div>
+                                    <input type="number" value={start} onChange={e => setStart(parseInt(e.target.value) || 1)} />
+                                    <div className="step-btn" onClick={() => setStart(start + 1)}>+</div>
+                                </div>
+                            </div>
+                            <div className="input-group">
+                                <label>Cantidad</label>
+                                <div className="number-control">
+                                    <div className="step-btn" onClick={() => setQty(Math.max(1, qty - 1))}>−</div>
+                                    <input type="number" value={qty} onChange={e => setQty(parseInt(e.target.value) || 1)} />
+                                    <div className="step-btn" onClick={() => setQty(qty + 1)}>+</div>
+                                </div>
+                            </div>
+                            <div className="input-group">
+                                <label>Tamaño</label>
+                                <select value={size} onChange={e => setSize(e.target.value)}>
+                                    <option value="A4">A4</option>
+                                    <option value="Oficio">Oficio</option>
+                                </select>
+                            </div>
+                            <div className="input-group">
+                                <label>Orden</label>
+                                <select value={order} onChange={e => setOrder(e.target.value)}>
+                                    <option value="asc">Ascendente (Normal)</option>
+                                    <option value="desc">Descendente (Inverso)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="actions">
+                            <button className="btn-gen" onClick={() => {
+                                let p = Array.from({length:qty}, (_,i)=>start+i);
+                                if (order === 'desc') p.reverse();
+                                setPages(p);
+                            }}>Generar Vista Previa</button>
+                            {pages.length > 0 && <button className="btn-print" onClick={() => window.print()}>Imprimir Ahora</button>}
+                        </div>
+                    </div>
+
+                    <div className="preview">
+                        {pages.map(n => <FolioPage key={n} number={n} pageSize={size} />)}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
