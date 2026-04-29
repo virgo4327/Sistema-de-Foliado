@@ -3,12 +3,12 @@
 }
 
 :root {
-  --bg-primary: #472825; /* Café profundo */
-  --bg-panel: rgba(150, 120, 111, 0.75); /* Marrón cálido glass */
-  --accent-color: #D3AB80; /* Bronce/Ocre */
-  --accent-glow: rgba(211, 171, 128, 0.2);
-  --text-color: #FFF4E2; /* Crema suave */
-  --text-dim: #FDE4BC;
+  --bg-primary: #1E2124; /* Negro Pizarra profundo */
+  --bg-panel: rgba(43, 49, 56, 0.85); /* Gris oscuro glass */
+  --accent-color: #6C788E; /* Azul Pizarra Slate */
+  --accent-glow: rgba(108, 120, 142, 0.2);
+  --text-color: #F8F9FA; /* Blanco puro legible */
+  --text-dim: #A6AEC1; /* Azul Pizarra muy claro */
   --white: #FFFFFF;
   --page-width: 210mm;
 }
@@ -17,9 +17,9 @@ body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(circle at 50% -20%, #633935 0%, var(--bg-primary) 80%),
-    linear-gradient(rgba(211, 171, 128, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(211, 171, 128, 0.03) 1px, transparent 1px);
+    radial-gradient(circle at 50% -20%, #2B3138 0%, var(--bg-primary) 80%),
+    linear-gradient(rgba(108, 120, 142, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 120, 142, 0.04) 1px, transparent 1px);
   background-size: 100% 100%, 30px 30px, 30px 30px;
   color: var(--text-color);
   min-height: 100vh;
