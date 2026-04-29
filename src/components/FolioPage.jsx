@@ -5,21 +5,26 @@ import styles from '../styles/FolioPage.module.css';
 const FolioPage = ({ number, pageSize }) => {
   const formattedNumber = number.toString().padStart(2, '0');
   const wordsRaw = numberToWords(number);
-  // Usamos non-breaking spaces para que no colapsen los márgenes de word-break: break-all
-  const words = (wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase()).replace(/ /g, '\u00A0');
-  
-  const initialDigits = formattedNumber.slice(0, -1);
-  const lastDigit = formattedNumber.slice(-1);
+  const words = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
+  const digits = formattedNumber.split('');
 
   return (
     <div className={`${styles.page} ${styles[pageSize.toLowerCase()]}`}>
       <div className={styles.folioContainer}>
         <div className={styles.numberVertical}>
-          {initialDigits && <div className={styles.numberText}>{initialDigits}</div>}
-          <div className={styles.lastDigit}>{lastDigit}</div>
+          {digits.map((digit, index) => (
+            <span 
+              key={index} 
+              className={index === digits.length - 1 ? styles.lastDigit : ''}
+            >
+              {digit}
+            </span>
+          ))}
         </div>
         <div className={styles.words}>
-          {words}
+          {words.split('').map((char, index) => (
+            char === ' ' ? <span key={index} className={styles.space}>&nbsp;</span> : <span key={index}>{char}</span>
+          ))}
         </div>
       </div>
     </div>
