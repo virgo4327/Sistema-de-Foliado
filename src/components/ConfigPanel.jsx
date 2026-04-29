@@ -31,46 +31,40 @@ const ConfigPanel = ({
       <div className={styles.formGrid}>
         <div className={styles.inputGroup}>
           <label>Inicio</label>
-          <div className={styles.numberControl}>
-            <button className={styles.stepBtn} onClick={() => setStartNumber(Math.max(1, startNumber - 1))}>−</button>
-            <input 
-              type="number" 
-              className={styles.inputField}
-              value={startNumber}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || val === '-') {
-                  setStartNumber(val);
-                } else {
-                  const num = parseInt(val, 10);
-                  if (!isNaN(num)) setStartNumber(num);
-                }
-              }}
-            />
-            <button className={styles.stepBtn} onClick={() => setStartNumber(startNumber + 1)}>+</button>
-          </div>
+          <input 
+            type="number" 
+            className={styles.inputField}
+            placeholder="Ingresar número"
+            value={startNumber === 0 ? '' : startNumber}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || val === '-') {
+                setStartNumber(val);
+              } else {
+                const num = parseInt(val, 10);
+                if (!isNaN(num)) setStartNumber(num);
+              }
+            }}
+          />
         </div>
 
         <div className={styles.inputGroup}>
           <label>Final</label>
-          <div className={styles.numberControl}>
-            <button className={styles.stepBtn} onClick={() => setEndNumber(Math.max(1, endNumber - 1))}>−</button>
-            <input 
-              type="number" 
-              className={styles.inputField}
-              value={endNumber}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || val === '-') {
-                  setEndNumber(val);
-                } else {
-                  const num = parseInt(val, 10);
-                  if (!isNaN(num)) setEndNumber(num);
-                }
-              }}
-            />
-            <button className={styles.stepBtn} onClick={() => setEndNumber(endNumber + 1)}>+</button>
-          </div>
+          <input 
+            type="number" 
+            className={styles.inputField}
+            placeholder="Ingresar número"
+            value={endNumber === 0 ? '' : endNumber}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || val === '-') {
+                setEndNumber(val);
+              } else {
+                const num = parseInt(val, 10);
+                if (!isNaN(num)) setEndNumber(num);
+              }
+            }}
+          />
         </div>
 
         <div className={styles.inputGroup}>
