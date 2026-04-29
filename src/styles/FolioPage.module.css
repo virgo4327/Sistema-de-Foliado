@@ -46,9 +46,11 @@
   margin-bottom: 2px;
 }
 
-.numberVertical span {
-  display: block;
-  height: 10.5pt; /* Espaciado respirable */
+.numberText {
+  width: 1ch;
+  word-break: break-all;
+  line-height: 10.5pt;
+  text-align: center;
 }
 
 .lastDigit {
@@ -60,21 +62,12 @@
 }
 
 .words {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-transform: none;
+  width: 1ch;
+  word-break: break-all;
+  line-height: 10.5pt;
+  text-align: center;
   margin-top: 2px;
-}
-
-.words span {
-  display: block;
-  height: 10.5pt;
-}
-
-.space {
-  height: 10.5pt !important;
-  display: block;
+  text-transform: none;
 }
 
 @media print {
