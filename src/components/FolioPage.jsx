@@ -31,4 +31,4 @@ const FolioPage = ({ number, pageSize }) => {
   );
 };
 
-export default FolioPage;
+export default React.memo(FolioPage);
