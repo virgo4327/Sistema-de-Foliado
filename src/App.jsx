@@ -3,8 +3,8 @@ import ConfigPanel from './components/ConfigPanel';
 import PrintPreview from './components/PrintPreview';
 
 function App() {
-  const [startNumber, setStartNumber] = useState(1);
-  const [endNumber, setEndNumber] = useState(1);
+  const [startNumber, setStartNumber] = useState('');
+  const [endNumber, setEndNumber] = useState('');
   const [pageSize, setPageSize] = useState('A4');
   const [printOrder, setPrintOrder] = useState('asc');
   const [pages, setPages] = useState([]);
@@ -43,8 +43,8 @@ function App() {
   };
 
   const handleClear = () => {
-    setStartNumber(1);
-    setEndNumber(1);
+    setStartNumber('');
+    setEndNumber('');
     setPageSize('A4');
     setPages([]);
     setIsGenerated(false);
