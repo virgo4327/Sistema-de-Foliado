@@ -4,8 +4,8 @@ import styles from '../styles/ConfigPanel.module.css';
 const ConfigPanel = ({ 
   startNumber, 
   setStartNumber, 
-  quantity, 
-  setQuantity, 
+  endNumber, 
+  setEndNumber, 
   pageSize, 
   setPageSize, 
   printOrder,
@@ -43,13 +43,13 @@ const ConfigPanel = ({
         </div>
 
         <div className={styles.inputGroup}>
-          <label>Cantidad</label>
+          <label>Fin</label>
           <div className={styles.numberControl}>
             <input 
               type="number" 
               className={styles.inputField}
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
+              value={endNumber}
+              onChange={(e) => setEndNumber(e.target.value === '' ? '' : parseInt(e.target.value))}
               placeholder="Ej: 100"
             />
           </div>

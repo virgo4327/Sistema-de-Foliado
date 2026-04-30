@@ -393,7 +393,7 @@
 
         function App() {
             const [start, setStart] = useState('');
-            const [qty, setQty] = useState('');
+            const [end, setEnd] = useState('');
             const [size, setSize] = useState('A4');
             const [order, setOrder] = useState('asc');
             const [pages, setPages] = useState([]);
@@ -413,9 +413,9 @@
                                 </div>
                             </div>
                             <div className="input-group">
-                                <label>Cantidad</label>
+                                <label>Fin</label>
                                 <div className="number-control">
-                                    <input type="number" value={qty} onChange={e => setQty(e.target.value === '' ? '' : parseInt(e.target.value))} placeholder="Ej: 100" />
+                                    <input type="number" value={end} onChange={e => setEnd(e.target.value === '' ? '' : parseInt(e.target.value))} placeholder="Ej: 100" />
                                 </div>
                             </div>
                             <div className="input-group">
@@ -436,7 +436,12 @@
                         <div className="actions">
                             <button className="btn-gen" onClick={() => {
                                 const s = start === '' ? 1 : start;
-                                const q = qty === '' ? 1 : qty;
+                                const e = end === '' ? s : end;
+                                if (e < s) {
+                                    alert('El número final debe ser mayor o igual al inicial');
+                                    return;
+                                }
+                                const q = e - s + 1;
                                 let p = Array.from({length:q}, (_,i)=>s+i);
                                 if (order === 'desc') p.reverse();
                                 setPages(p);

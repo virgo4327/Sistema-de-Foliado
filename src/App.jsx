@@ -4,7 +4,7 @@ import PrintPreview from './components/PrintPreview';
 
 function App() {
   const [startNumber, setStartNumber] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [endNumber, setEndNumber] = useState('');
   const [pageSize, setPageSize] = useState('A4');
   const [printOrder, setPrintOrder] = useState('asc');
   const [pages, setPages] = useState([]);
@@ -12,12 +12,14 @@ function App() {
 
   const handleGenerate = () => {
     const start = typeof startNumber === 'string' ? parseInt(startNumber) || 1 : startNumber;
-    const qty = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity;
+    const end = typeof endNumber === 'string' ? parseInt(endNumber) || start : endNumber;
     
-    if (start < 1 || qty < 1) {
-      alert('Por favor ingrese números válidos mayores a 0');
+    if (start < 1 || end < start) {
+      alert('Por favor ingrese números válidos y asegúrese que el número final sea mayor o igual al inicial');
       return;
     }
+
+    const qty = end - start + 1;
 
     let newPages = Array.from({ length: qty }, (_, i) => start + i);
     if (printOrder === 'desc') {
@@ -38,7 +40,7 @@ function App() {
 
   const handleClear = () => {
     setStartNumber('');
-    setQuantity('');
+    setEndNumber('');
     setPageSize('A4');
     setPages([]);
     setIsGenerated(false);
@@ -49,8 +51,8 @@ function App() {
       <ConfigPanel 
         startNumber={startNumber}
         setStartNumber={setStartNumber}
-        quantity={quantity}
-        setQuantity={setQuantity}
+        endNumber={endNumber}
+        setEndNumber={setEndNumber}
         pageSize={pageSize}
         setPageSize={setPageSize}
         printOrder={printOrder}
