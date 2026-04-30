@@ -4,8 +4,8 @@ import styles from '../styles/ConfigPanel.module.css';
 const ConfigPanel = ({ 
   startNumber, 
   setStartNumber, 
-  endNumber, 
-  setEndNumber, 
+  quantity, 
+  setQuantity, 
   pageSize, 
   setPageSize, 
   printOrder,
@@ -25,46 +25,36 @@ const ConfigPanel = ({
           <line x1="16" y1="17" x2="8" y2="17"></line>
           <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
-        <h1>Sistema de Foliado</h1>
+        <h1>Sistema de Foliado Premium</h1>
       </div>
 
       <div className={styles.formGrid}>
         <div className={styles.inputGroup}>
           <label>Inicio</label>
-          <input 
-            type="number" 
-            className={styles.inputField}
-            placeholder="Ingresar número"
-            value={startNumber === 0 ? '' : startNumber}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || val === '-') {
-                setStartNumber(val);
-              } else {
-                const num = parseInt(val, 10);
-                if (!isNaN(num)) setStartNumber(num);
-              }
-            }}
-          />
+          <div className={styles.numberControl}>
+            <button className={styles.stepBtn} onClick={() => setStartNumber(Math.max(1, startNumber - 1))}>−</button>
+            <input 
+              type="number" 
+              className={styles.inputField}
+              value={startNumber}
+              onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
+            />
+            <button className={styles.stepBtn} onClick={() => setStartNumber(startNumber + 1)}>+</button>
+          </div>
         </div>
 
         <div className={styles.inputGroup}>
-          <label>Final</label>
-          <input 
-            type="number" 
-            className={styles.inputField}
-            placeholder="Ingresar número"
-            value={endNumber === 0 ? '' : endNumber}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || val === '-') {
-                setEndNumber(val);
-              } else {
-                const num = parseInt(val, 10);
-                if (!isNaN(num)) setEndNumber(num);
-              }
-            }}
-          />
+          <label>Cantidad</label>
+          <div className={styles.numberControl}>
+            <button className={styles.stepBtn} onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+            <input 
+              type="number" 
+              className={styles.inputField}
+              value={quantity}
+              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+            />
+            <button className={styles.stepBtn} onClick={() => setQuantity(quantity + 1)}>+</button>
+          </div>
         </div>
 
         <div className={styles.inputGroup}>
