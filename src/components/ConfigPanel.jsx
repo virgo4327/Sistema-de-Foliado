@@ -25,35 +25,33 @@ const ConfigPanel = ({
           <line x1="16" y1="17" x2="8" y2="17"></line>
           <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
-        <h1>Sistema de Foliado Premium</h1>
+        <h1>Sistema de Foliado</h1>
       </div>
 
       <div className={styles.formGrid}>
         <div className={styles.inputGroup}>
           <label>Inicio</label>
           <div className={styles.numberControl}>
-            <button className={styles.stepBtn} onClick={() => setStartNumber(Math.max(1, startNumber - 1))}>−</button>
             <input 
               type="number" 
               className={styles.inputField}
               value={startNumber}
-              onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
+              onChange={(e) => setStartNumber(e.target.value === '' ? '' : parseInt(e.target.value))}
+              placeholder="Ej: 1"
             />
-            <button className={styles.stepBtn} onClick={() => setStartNumber(startNumber + 1)}>+</button>
           </div>
         </div>
 
         <div className={styles.inputGroup}>
           <label>Cantidad</label>
           <div className={styles.numberControl}>
-            <button className={styles.stepBtn} onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
             <input 
               type="number" 
               className={styles.inputField}
               value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              onChange={(e) => setQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
+              placeholder="Ej: 100"
             />
-            <button className={styles.stepBtn} onClick={() => setQuantity(quantity + 1)}>+</button>
           </div>
         </div>
 
