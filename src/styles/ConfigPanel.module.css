@@ -209,6 +209,22 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
+.btnWord {
+  background: linear-gradient(135deg, #2B5D6E 0%, #1A3A45 100%);
+  border: 1px solid rgba(100, 200, 230, 0.35) !important;
+  color: #C8EEF8;
+  flex: 1;
+  box-shadow: 0 10px 25px rgba(40, 120, 160, 0.25);
+  gap: 10px;
+}
+
+.btnWord:hover {
+  background: linear-gradient(135deg, #3A7A90 0%, #225570 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(40, 150, 200, 0.4);
+  border-color: rgba(100, 200, 230, 0.6) !important;
+}
+
 .btn:hover {
   filter: brightness(1.1);
 }

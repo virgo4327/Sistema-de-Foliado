@@ -38,6 +38,14 @@ function App() {
     window.print();
   };
 
+  const handleDownloadWord = async () => {
+    const s = typeof startNumber === 'string' ? parseInt(startNumber) || 1 : startNumber;
+    const e = typeof endNumber === 'string' ? parseInt(endNumber) || s : endNumber;
+    // Import dinámico: la librería docx solo se carga cuando se necesita
+    const { generateAndDownloadWord } = await import('./utils/generateWordDoc');
+    await generateAndDownloadWord(pages, pageSize, s, e);
+  };
+
   const handleClear = () => {
     setStartNumber('');
     setEndNumber('');
@@ -60,6 +68,7 @@ function App() {
         onGenerate={handleGenerate}
         onPrint={handlePrint}
         onClear={handleClear}
+        onDownloadWord={handleDownloadWord}
         isGenerated={isGenerated}
       />
       
