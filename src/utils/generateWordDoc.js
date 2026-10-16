@@ -6,7 +6,10 @@ import {
   PageBreak,
   AlignmentType,
   convertMillimetersToTwip,
+  BorderStyle,
   FrameAnchorType,
+  HorizontalPositionRelativeFrom,
+  VerticalPositionRelativeFrom,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { numberToWords } from './numberToWords';
@@ -18,98 +21,42 @@ const PAGE_SIZES = {
 };
 
 /**
- * Construye los párrafos de un folio individual.
- * Diseño: número vertical (dígito por dígito) + línea bajo último dígito + letras vertical.
- */
-function buildFolioContent(num) {
-  const formatted = num.toString().padStart(2, '0');
-  const digits = formatted.split('');
-
-  const wordsRaw = numberToWords(num);
-  const words = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
-  const chars = words.split('');
-
-  const paragraphs = [];
-
-  // --- Dígitos en vertical ---
-  digits.forEach((digit, i) => {
-    const isLast = i === digits.length - 1;
-    paragraphs.push(
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 0, line: 240 },
-        border: isLast
-          ? { bottom: { color: '000000', space: 1, style: 'single', size: 6 } }
-          : {},
-        children: [
-          new TextRun({
-            text: digit,
-            font: 'Courier New',
-            size: 20,
-          }),
-        ],
-      })
-    );
-  });
-
-  // Separación entre número y letras
-  paragraphs.push(
-    new Paragraph({
-      spacing: { before: 40, after: 0 },
-      children: [new TextRun({ text: '' })],
-    })
-  );
-
-  // --- Letras en vertical ---
-  chars.forEach((char) => {
-    paragraphs.push(
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 0, line: 240 },
-        children: [
-          new TextRun({
-            text: char === ' ' ? '\u00A0' : char,
-            font: 'Courier New',
-            size: 20,
-          }),
-        ],
-      })
-    );
-  });
-
-  return paragraphs;
-}
-
-/**
  * Genera y descarga un archivo .docx con un folio por página.
+ * Cada folio aparece en la esquina superior derecha:
+ *   - Número vertical (dígito por dígito), último dígito subrayado
+ *   - Letras en vertical (carácter por carácter)
  *
  * @param {number[]} pages    - Array de números de folio
  * @param {string}  pageSize  - 'A4' | 'Oficio'
- * @param {number}  start     - Número inicial (para el nombre del archivo)
- * @param {number}  end       - Número final (para el nombre del archivo)
+ * @param {number}  start     - Número inicial (nombre del archivo)
+ * @param {number}  end       - Número final (nombre del archivo)
  */
 export async function generateAndDownloadWord(pages, pageSize, start, end) {
   const size = PAGE_SIZES[pageSize] ?? PAGE_SIZES['A4'];
 
-  const pageWidth  = convertMillimetersToTwip(size.width);
-  const pageHeight = convertMillimetersToTwip(size.height);
+  const pageWidthTwip  = convertMillimetersToTwip(size.width);
+  const pageHeightTwip = convertMillimetersToTwip(size.height);
 
-  // Ancho del frame del folio (~15mm)
-  const frameWidth = convertMillimetersToTwip(15);
-  // Posición X: 3mm desde el borde derecho
-  const frameX = pageWidth - frameWidth - convertMillimetersToTwip(3);
-  // Posición Y: 3mm desde arriba
-  const frameY = convertMillimetersToTwip(3);
+  // Márgenes de página (3mm en todos lados, igual que el diseño web)
+  const marginTwip = convertMillimetersToTwip(3);
 
-  // Construir todos los hijos de la sección única
-  const allChildren = [];
+  // Ancho del frame del folio (~14mm para que quepa el texto)
+  const frameWidth = convertMillimetersToTwip(14);
 
-  pages.forEach((num, idx) => {
-    const folioParagraphs = buildFolioContent(num);
+  // Construir todas las secciones del documento (una sección = una página)
+  const sections = pages.map((num, idx) => {
+    const formatted = num.toString().padStart(2, '0');
+    const digits    = formatted.split('');
 
-    // Salto de página entre folios (no antes del primero)
+    const wordsRaw = numberToWords(num);
+    const words    = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
+    const chars    = words.split('');
+
+    const children = [];
+
+    // Salto de página antes de cada folio (excepto el primero)
     if (idx > 0) {
-      allChildren.push(
+      children.push(
         new Paragraph({
           children: [new PageBreak()],
           spacing: { before: 0, after: 0 },
@@ -117,23 +64,100 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
       );
     }
 
-    // Aplicar frame posicionado a cada párrafo del folio
-    folioParagraphs.forEach((p) => {
-      p.addFrameProperty({
-        width: frameWidth,
-        height: convertMillimetersToTwip(80),
-        anchor: {
-          horizontal: FrameAnchorType.PAGE,
-          vertical: FrameAnchorType.PAGE,
-        },
-        position: {
-          x: frameX,
-          y: frameY,
-        },
-        wrap: 'notBeside',
-      });
-      allChildren.push(p);
+    // --- Dígitos en vertical con frame posicionado en esquina superior derecha ---
+    digits.forEach((digit, i) => {
+      const isLast = i === digits.length - 1;
+
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 0, line: 240 },
+          border: isLast
+            ? {
+                bottom: {
+                  color: '000000',
+                  space: 1,
+                  style: BorderStyle.SINGLE,
+                  size: 6,
+                },
+              }
+            : {},
+          frame: {
+            position: {
+              x: { offset: pageWidthTwip - frameWidth - marginTwip, relative: HorizontalPositionRelativeFrom.PAGE },
+              y: { offset: marginTwip, relative: VerticalPositionRelativeFrom.PAGE },
+            },
+            width: frameWidth,
+            height: convertMillimetersToTwip(100),
+            anchor: {
+              horizontal: FrameAnchorType.PAGE,
+              vertical: FrameAnchorType.PAGE,
+            },
+            allowOverlap: true,
+          },
+          children: [
+            new TextRun({
+              text: digit,
+              font: 'Courier New',
+              size: 18, // 9pt en half-points
+            }),
+          ],
+        })
+      );
     });
+
+    // Espacio entre dígitos y letras
+    children.push(
+      new Paragraph({
+        spacing: { before: 40, after: 0 },
+        frame: {
+          position: {
+            x: { offset: pageWidthTwip - frameWidth - marginTwip, relative: HorizontalPositionRelativeFrom.PAGE },
+            y: { offset: marginTwip, relative: VerticalPositionRelativeFrom.PAGE },
+          },
+          width: frameWidth,
+          height: convertMillimetersToTwip(100),
+          anchor: {
+            horizontal: FrameAnchorType.PAGE,
+            vertical: FrameAnchorType.PAGE,
+          },
+          allowOverlap: true,
+        },
+        children: [new TextRun({ text: '' })],
+      })
+    );
+
+    // --- Letras en vertical ---
+    chars.forEach((char) => {
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 0, line: 240 },
+          frame: {
+            position: {
+              x: { offset: pageWidthTwip - frameWidth - marginTwip, relative: HorizontalPositionRelativeFrom.PAGE },
+              y: { offset: marginTwip, relative: VerticalPositionRelativeFrom.PAGE },
+            },
+            width: frameWidth,
+            height: convertMillimetersToTwip(100),
+            anchor: {
+              horizontal: FrameAnchorType.PAGE,
+              vertical: FrameAnchorType.PAGE,
+            },
+            allowOverlap: true,
+          },
+          children: [
+            new TextRun({
+              text: char === ' ' ? '\u00A0' : char,
+              font: 'Courier New',
+              size: 18,
+            }),
+          ],
+        })
+      );
+    });
+
+    return children;
   });
 
   const doc = new Document({
@@ -142,18 +166,18 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
         properties: {
           page: {
             size: {
-              width: pageWidth,
-              height: pageHeight,
+              width:  pageWidthTwip,
+              height: pageHeightTwip,
             },
             margin: {
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
+              top:    marginTwip,
+              right:  marginTwip,
+              bottom: marginTwip,
+              left:   marginTwip,
             },
           },
         },
-        children: allChildren,
+        children: sections.flat(),
       },
     ],
   });
