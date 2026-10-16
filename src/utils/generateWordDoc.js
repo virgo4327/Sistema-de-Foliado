@@ -200,7 +200,8 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
     ],
   });
 
-  const blob = await Packer.toBlob(doc);
+  const buffer = await Packer.toBuffer(doc);
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
