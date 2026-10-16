@@ -13,7 +13,6 @@ import {
   WidthType,
   VerticalAlign,
 } from 'docx';
-import { saveAs } from 'file-saver';
 import { numberToWords } from './numberToWords';
 
 // Dimensiones de página en milímetros
@@ -202,5 +201,12 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
   });
 
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `folios_${start}_${end}.docx`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `folios_${start}_${end}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
