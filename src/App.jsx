@@ -41,9 +41,17 @@ function App() {
   const handleDownloadWord = async () => {
     const s = typeof startNumber === 'string' ? parseInt(startNumber) || 1 : startNumber;
     const e = typeof endNumber === 'string' ? parseInt(endNumber) || s : endNumber;
-    // Import dinámico: la librería docx solo se carga cuando se necesita
-    const { generateAndDownloadWord } = await import('./utils/generateWordDoc');
-    await generateAndDownloadWord(pages, pageSize, s, e);
+    if (!pages || pages.length === 0) {
+      alert('Primero genera la vista previa.');
+      return;
+    }
+    try {
+      const { generateAndDownloadWord } = await import('./utils/generateWordDoc');
+      await generateAndDownloadWord(pages, pageSize, s, e);
+    } catch (err) {
+      console.error('Error generando Word:', err);
+      alert('Error al generar el Word: ' + (err?.message || err));
+    }
   };
 
   const handleClear = () => {
