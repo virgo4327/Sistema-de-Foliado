@@ -13,6 +13,7 @@ import {
   WidthType,
   VerticalAlign,
 } from 'docx';
+import { saveAs } from 'file-saver';
 import { numberToWords } from './numberToWords';
 
 // Dimensiones de página en milímetros
@@ -44,11 +45,12 @@ const NO_CELL_MARGIN = {
  *   Todo compacto, sin espacio entre número y letras
  */
 function buildFolioParagraphs(num) {
-  const formatted = num.toString().padStart(2, '0');
+  const numericVal = typeof num === 'string' ? parseInt(num, 10) || 0 : Number(num);
+  const formatted = numericVal.toString().padStart(2, '0');
   const digits    = formatted.split('');
 
-  const wordsRaw = numberToWords(num);
-  const words    = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
+  const wordsRaw = numberToWords(numericVal) || '';
+  const words    = wordsRaw ? wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase() : '';
   const chars    = words.split('');
 
   const paragraphs = [];
@@ -204,14 +206,19 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
     ],
   });
 
-  const buffer = await Packer.toBuffer(doc);
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `folios_${start}_${end}.docx`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const blob = await Packer.toBlob(doc);
+  const fileName = `folios_${start}_${end}.docx`;
+  
+  if (typeof saveAs === 'function') {
+    saveAs(blob, fileName);
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 }

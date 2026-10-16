@@ -9,6 +9,7 @@ function App() {
   const [printOrder, setPrintOrder] = useState('asc');
   const [pages, setPages] = useState([]);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isDownloadingWord, setIsDownloadingWord] = useState(false);
 
   const handleGenerate = () => {
     const start = typeof startNumber === 'string' ? parseInt(startNumber) || 1 : startNumber;
@@ -39,18 +40,22 @@ function App() {
   };
 
   const handleDownloadWord = async () => {
+    if (isDownloadingWord) return;
     const s = typeof startNumber === 'string' ? parseInt(startNumber) || 1 : startNumber;
     const e = typeof endNumber === 'string' ? parseInt(endNumber) || s : endNumber;
     if (!pages || pages.length === 0) {
       alert('Primero genera la vista previa.');
       return;
     }
+    setIsDownloadingWord(true);
     try {
       const { generateAndDownloadWord } = await import('./utils/generateWordDoc');
       await generateAndDownloadWord(pages, pageSize, s, e);
     } catch (err) {
       console.error('Error generando Word:', err);
       alert('Error al generar el Word: ' + (err?.message || err));
+    } finally {
+      setIsDownloadingWord(false);
     }
   };
 
@@ -78,6 +83,7 @@ function App() {
         onClear={handleClear}
         onDownloadWord={handleDownloadWord}
         isGenerated={isGenerated}
+        isDownloadingWord={isDownloadingWord}
       />
       
       <PrintPreview pages={pages} pageSize={pageSize} />

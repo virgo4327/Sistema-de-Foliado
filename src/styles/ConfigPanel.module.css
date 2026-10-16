@@ -225,6 +225,14 @@
   border-color: rgba(100, 200, 230, 0.6) !important;
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
 .btn:hover {
   filter: brightness(1.1);
 }
