@@ -7,9 +7,11 @@ import {
   AlignmentType,
   convertMillimetersToTwip,
   BorderStyle,
-  FrameAnchorType,
-  HorizontalPositionRelativeFrom,
-  VerticalPositionRelativeFrom,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  VerticalAlign,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { numberToWords } from './numberToWords';
@@ -20,11 +22,82 @@ const PAGE_SIZES = {
   Oficio: { width: 216, height: 330 },
 };
 
+// Borde invisible para celdas de la tabla
+const NO_BORDER = {
+  top:    { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+  bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+  left:   { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+  right:  { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+};
+
+/**
+ * Construye los párrafos del folio:
+ *   - Dígitos verticales, último con subrayado
+ *   - Letras del número en español, verticales
+ */
+function buildFolioParagraphs(num) {
+  const formatted = num.toString().padStart(2, '0');
+  const digits    = formatted.split('');
+
+  const wordsRaw = numberToWords(num);
+  const words    = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
+  const chars    = words.split('');
+
+  const paragraphs = [];
+
+  // Dígitos en vertical
+  digits.forEach((digit, i) => {
+    const isLast = i === digits.length - 1;
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0, line: 220 },
+        border: isLast
+          ? { bottom: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 } }
+          : {},
+        children: [
+          new TextRun({
+            text: digit,
+            font: 'Courier New',
+            size: 18, // 9pt
+          }),
+        ],
+      })
+    );
+  });
+
+  // Pequeño espacio
+  paragraphs.push(
+    new Paragraph({
+      spacing: { before: 30, after: 0 },
+      children: [new TextRun({ text: '' })],
+    })
+  );
+
+  // Letras en vertical
+  chars.forEach((char) => {
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0, line: 220 },
+        children: [
+          new TextRun({
+            text: char === ' ' ? '\u00A0' : char,
+            font: 'Courier New',
+            size: 18,
+          }),
+        ],
+      })
+    );
+  });
+
+  return paragraphs;
+}
+
 /**
  * Genera y descarga un archivo .docx con un folio por página.
- * Cada folio aparece en la esquina superior derecha:
- *   - Número vertical (dígito por dígito), último dígito subrayado
- *   - Letras en vertical (carácter por carácter)
+ * El sello del folio aparece en la esquina superior derecha usando una tabla:
+ *   | celda vacía ancha | celda con folio estrecha |
  *
  * @param {number[]} pages    - Array de números de folio
  * @param {string}  pageSize  - 'A4' | 'Oficio'
@@ -36,27 +109,21 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
 
   const pageWidthTwip  = convertMillimetersToTwip(size.width);
   const pageHeightTwip = convertMillimetersToTwip(size.height);
+  const marginTwip     = convertMillimetersToTwip(5);
 
-  // Márgenes de página (3mm en todos lados, igual que el diseño web)
-  const marginTwip = convertMillimetersToTwip(3);
+  // Ancho útil de la página descontando márgenes
+  const usableWidth = pageWidthTwip - marginTwip * 2;
 
-  // Ancho del frame del folio (~14mm para que quepa el texto)
-  const frameWidth = convertMillimetersToTwip(14);
+  // La columna del folio ocupa ~14mm, el resto es la columna vacía
+  const folioColWidth = convertMillimetersToTwip(14);
+  const emptyColWidth = usableWidth - folioColWidth;
 
-  // Construir todas las secciones del documento (una sección = una página)
-  const sections = pages.map((num, idx) => {
-    const formatted = num.toString().padStart(2, '0');
-    const digits    = formatted.split('');
+  const allChildren = [];
 
-    const wordsRaw = numberToWords(num);
-    const words    = wordsRaw.charAt(0).toUpperCase() + wordsRaw.slice(1).toLowerCase();
-    const chars    = words.split('');
-
-    const children = [];
-
-    // Salto de página antes de cada folio (excepto el primero)
+  pages.forEach((num, idx) => {
+    // Salto de página entre folios (no antes del primero)
     if (idx > 0) {
-      children.push(
+      allChildren.push(
         new Paragraph({
           children: [new PageBreak()],
           spacing: { before: 0, after: 0 },
@@ -64,100 +131,42 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
       );
     }
 
-    // --- Dígitos en vertical con frame posicionado en esquina superior derecha ---
-    digits.forEach((digit, i) => {
-      const isLast = i === digits.length - 1;
+    const folioParagraphs = buildFolioParagraphs(num);
 
-      children.push(
-        new Paragraph({
-          alignment: AlignmentType.CENTER,
-          spacing: { before: 0, after: 0, line: 240 },
-          border: isLast
-            ? {
-                bottom: {
-                  color: '000000',
-                  space: 1,
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                },
-              }
-            : {},
-          frame: {
-            position: {
-              x: { offset: pageWidthTwip - frameWidth - marginTwip, relative: HorizontalPositionRelativeFrom.PAGE },
-              y: { offset: marginTwip, relative: VerticalPositionRelativeFrom.PAGE },
-            },
-            width: frameWidth,
-            height: convertMillimetersToTwip(100),
-            anchor: {
-              horizontal: FrameAnchorType.PAGE,
-              vertical: FrameAnchorType.PAGE,
-            },
-            allowOverlap: true,
-          },
+    // Tabla de 1 fila, 2 columnas: [vacío | folio]
+    const table = new Table({
+      width: { size: usableWidth, type: WidthType.DXA },
+      borders: {
+        top:           { style: BorderStyle.NONE, size: 0 },
+        bottom:        { style: BorderStyle.NONE, size: 0 },
+        left:          { style: BorderStyle.NONE, size: 0 },
+        right:         { style: BorderStyle.NONE, size: 0 },
+        insideH:       { style: BorderStyle.NONE, size: 0 },
+        insideV:       { style: BorderStyle.NONE, size: 0 },
+      },
+      rows: [
+        new TableRow({
           children: [
-            new TextRun({
-              text: digit,
-              font: 'Courier New',
-              size: 18, // 9pt en half-points
+            // Celda izquierda vacía
+            new TableCell({
+              width: { size: emptyColWidth, type: WidthType.DXA },
+              borders: NO_BORDER,
+              verticalAlign: VerticalAlign.TOP,
+              children: [new Paragraph({ children: [new TextRun('')] })],
+            }),
+            // Celda derecha con el folio
+            new TableCell({
+              width: { size: folioColWidth, type: WidthType.DXA },
+              borders: NO_BORDER,
+              verticalAlign: VerticalAlign.TOP,
+              children: folioParagraphs,
             }),
           ],
-        })
-      );
+        }),
+      ],
     });
 
-    // Espacio entre dígitos y letras
-    children.push(
-      new Paragraph({
-        spacing: { before: 40, after: 0 },
-        frame: {
-          position: {
-            x: { offset: pageWidthTwip - frameWidth - marginTwip, relative: HorizontalPositionRelativeFrom.PAGE },
-            y: { offset: marginTwip, relative: VerticalPositionRelativeFrom.PAGE },
-          },
-          width: frameWidth,
-          height: convertMillimetersToTwip(100),
-          anchor: {
-            horizontal: FrameAnchorType.PAGE,
-            vertical: FrameAnchorType.PAGE,
-          },
-          allowOverlap: true,
-        },
-        children: [new TextRun({ text: '' })],
-      })
-    );
-
-    // --- Letras en vertical ---
-    chars.forEach((char) => {
-      children.push(
-        new Paragraph({
-          alignment: AlignmentType.CENTER,
-          spacing: { before: 0, after: 0, line: 240 },
-          frame: {
-            position: {
-              x: { offset: pageWidthTwip - frameWidth - marginTwip, relative: HorizontalPositionRelativeFrom.PAGE },
-              y: { offset: marginTwip, relative: VerticalPositionRelativeFrom.PAGE },
-            },
-            width: frameWidth,
-            height: convertMillimetersToTwip(100),
-            anchor: {
-              horizontal: FrameAnchorType.PAGE,
-              vertical: FrameAnchorType.PAGE,
-            },
-            allowOverlap: true,
-          },
-          children: [
-            new TextRun({
-              text: char === ' ' ? '\u00A0' : char,
-              font: 'Courier New',
-              size: 18,
-            }),
-          ],
-        })
-      );
-    });
-
-    return children;
+    allChildren.push(table);
   });
 
   const doc = new Document({
@@ -177,7 +186,7 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
             },
           },
         },
-        children: sections.flat(),
+        children: allChildren,
       },
     ],
   });
