@@ -194,7 +194,6 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
               bottom: pageMargin,
               left:   pageMargin,
             },
-            gutter: 0,
           },
         },
         children: allChildren,
