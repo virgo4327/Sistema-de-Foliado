@@ -124,6 +124,10 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
 
   const allChildren = [];
 
+  if (!pages || pages.length === 0) {
+    throw new Error('No hay páginas para generar');
+  }
+
   pages.forEach((num, idx) => {
     if (idx > 0) {
       allChildren.push(
