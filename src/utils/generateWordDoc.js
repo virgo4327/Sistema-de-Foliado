@@ -14,7 +14,7 @@ import {
   VerticalAlign,
 } from 'docx';
 import { saveAs } from 'file-saver';
-import { numberToWords } from './numberToWords';
+import { numberToWords } from './numberToWords.js';
 
 // Dimensiones de página en milímetros
 const PAGE_SIZES = {
@@ -32,10 +32,10 @@ const NO_BORDER = {
 
 // Sin padding de celda (0 en todos los lados)
 const NO_CELL_MARGIN = {
-  top:    { value: 0, type: WidthType.DXA },
-  bottom: { value: 0, type: WidthType.DXA },
-  left:   { value: 0, type: WidthType.DXA },
-  right:  { value: 0, type: WidthType.DXA },
+  top: 0,
+  bottom: 0,
+  left: 0,
+  right: 0,
 };
 
 /**
