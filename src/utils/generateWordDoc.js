@@ -3,15 +3,9 @@ import {
   Packer,
   Paragraph,
   TextRun,
-  PageBreak,
   AlignmentType,
+  UnderlineType,
   convertMillimetersToTwip,
-  BorderStyle,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  VerticalAlign,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { numberToWords } from './numberToWords.js';
@@ -22,29 +16,16 @@ const PAGE_SIZES = {
   Oficio: { width: 216, height: 330 },
 };
 
-// Borde completamente invisible
-const NO_BORDER = {
-  top:    { style: BorderStyle.NONE, size: 0, color: 'auto' },
-  bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-  left:   { style: BorderStyle.NONE, size: 0, color: 'auto' },
-  right:  { style: BorderStyle.NONE, size: 0, color: 'auto' },
-};
-
-// Sin padding de celda (0 en todos los lados)
-const NO_CELL_MARGIN = {
-  top: 0,
-  bottom: 0,
-  left: 0,
-  right: 0,
-};
-
 /**
- * Construye los párrafos del folio:
- *   - Dígitos verticales, último con subrayado fino
+ * Construye los párrafos del folio alineados a la derecha:
+ *   - Dígitos verticales, último con subrayado fino (idéntico a la vista previa)
  *   - Letras del número en español, verticales
- *   Todo compacto, sin espacio entre número y letras
+ *   - Sin tablas ni marcos, para que quede limpio y flotante como un sello
+ *
+ * @param {number|string} num        - Número de folio
+ * @param {boolean}       isNewPage  - Si debe iniciar con salto de página
  */
-function buildFolioParagraphs(num) {
+function buildFolioParagraphs(num, isNewPage = false) {
   const numericVal = typeof num === 'string' ? parseInt(num, 10) || 0 : Number(num);
   const formatted = numericVal.toString().padStart(2, '0');
   const digits    = formatted.split('');
@@ -57,36 +38,46 @@ function buildFolioParagraphs(num) {
 
   // Dígitos en vertical
   digits.forEach((digit, i) => {
-    const isLast = i === digits.length - 1;
+    const isFirst = i === 0;
+    const isLast  = i === digits.length - 1;
     paragraphs.push(
       new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 0, line: 140, lineRule: 'exact' },
-        border: isLast
-          ? { bottom: { color: '000000', space: 0, style: BorderStyle.SINGLE, size: 1 } } // línea fina
-          : {},
+        alignment: AlignmentType.RIGHT,
+        pageBreakBefore: isFirst && isNewPage,
+        spacing: {
+          before: 0,
+          after: isLast ? 60 : 0, // 3pt de respiro tras el último dígito
+          line: 210,              // 10.5pt exacto (igual a la vista previa)
+          lineRule: 'exact',
+        },
         children: [
           new TextRun({
             text: digit,
             font: 'Courier New',
-            size: 14, // 7pt — compacto
+            size: 20, // 10pt
+            underline: isLast ? { type: UnderlineType.SINGLE, color: '000000' } : undefined,
           }),
         ],
       })
     );
   });
 
-  // Letras en vertical — pegadas al número, sin espacio
+  // Letras en vertical
   chars.forEach((char) => {
     paragraphs.push(
       new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 0, line: 140, lineRule: 'exact' },
+        alignment: AlignmentType.RIGHT,
+        spacing: {
+          before: 0,
+          after: 0,
+          line: 210, // 10.5pt exacto
+          lineRule: 'exact',
+        },
         children: [
           new TextRun({
             text: char === ' ' ? '\u00A0' : char,
             font: 'Courier New',
-            size: 14,
+            size: 20, // 10pt
           }),
         ],
       })
@@ -99,9 +90,8 @@ function buildFolioParagraphs(num) {
 /**
  * Genera y descarga un archivo .docx con un folio por página.
  *
- * Diseño: tabla invisible de 2 columnas [celda vacía ancha | folio estrecho]
- * Márgenes de página: 0 en todos los lados para que el folio quede
- * exactamente en la esquina superior derecha del papel.
+ * Posicionamiento limpio mediante márgenes de 3mm (igual a la vista previa web)
+ * y párrafos alineados a la derecha, sin tablas para evitar bordes o cuadrículas.
  *
  * @param {number[]} pages    - Array de números de folio
  * @param {string}  pageSize  - 'A4' | 'Oficio'
@@ -114,74 +104,18 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
   const pageWidthTwip  = convertMillimetersToTwip(size.width);
   const pageHeightTwip = convertMillimetersToTwip(size.height);
 
-  // Márgenes de página = 0 para que el sello quede pegado al borde
-  const pageMargin = 0;
-
-  // Ancho total de la tabla = ancho de página completo
-  const tableWidth = pageWidthTwip;
-
-  // Columna del folio: ~12mm (suficiente para 2 dígitos + letras cortas)
-  const folioColWidth = convertMillimetersToTwip(12);
-  const emptyColWidth = tableWidth - folioColWidth;
-
-  const allChildren = [];
+  // Márgenes: 3mm en todos los lados (idéntico a top: 3mm, right: 3mm de la web)
+  const margin3mm = convertMillimetersToTwip(3);
 
   if (!pages || pages.length === 0) {
     throw new Error('No hay páginas para generar');
   }
 
+  const allChildren = [];
+
   pages.forEach((num, idx) => {
-    if (idx > 0) {
-      allChildren.push(
-        new Paragraph({
-          children: [new PageBreak()],
-          spacing: { before: 0, after: 0 },
-        })
-      );
-    }
-
-    const folioParagraphs = buildFolioParagraphs(num);
-
-    const table = new Table({
-      width: { size: tableWidth, type: WidthType.DXA },
-      borders: {
-        top:     { style: BorderStyle.NONE, size: 0, color: 'auto' },
-        bottom:  { style: BorderStyle.NONE, size: 0, color: 'auto' },
-        left:    { style: BorderStyle.NONE, size: 0, color: 'auto' },
-        right:   { style: BorderStyle.NONE, size: 0, color: 'auto' },
-        insideH: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-        insideV: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-      },
-      rows: [
-        new TableRow({
-          children: [
-            // Celda izquierda: vacía, ocupa el resto del ancho
-            new TableCell({
-              width: { size: emptyColWidth, type: WidthType.DXA },
-              borders: NO_BORDER,
-              margins: NO_CELL_MARGIN,
-              verticalAlign: VerticalAlign.TOP,
-              children: [
-                new Paragraph({
-                  spacing: { before: 0, after: 0 },
-                  children: [new TextRun('')],
-                }),
-              ],
-            }),
-            // Celda derecha: sello del folio, sin padding
-            new TableCell({
-              width: { size: folioColWidth, type: WidthType.DXA },
-              borders: NO_BORDER,
-              margins: NO_CELL_MARGIN,
-              verticalAlign: VerticalAlign.TOP,
-              children: folioParagraphs,
-            }),
-          ],
-        }),
-      ],
-    });
-
-    allChildren.push(table);
+    const folioParagraphs = buildFolioParagraphs(num, idx > 0);
+    allChildren.push(...folioParagraphs);
   });
 
   const doc = new Document({
@@ -194,10 +128,12 @@ export async function generateAndDownloadWord(pages, pageSize, start, end) {
               height: pageHeightTwip,
             },
             margin: {
-              top:    pageMargin,
-              right:  pageMargin,
-              bottom: pageMargin,
-              left:   pageMargin,
+              top:    margin3mm,
+              right:  margin3mm,
+              bottom: margin3mm,
+              left:   margin3mm,
+              header: 0,
+              footer: 0,
             },
           },
         },
