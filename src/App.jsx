@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ConfigPanel from './components/ConfigPanel';
 import PrintPreview from './components/PrintPreview';
+import WordConfigModal from './components/WordConfigModal';
 
 function App() {
   const [startNumber, setStartNumber] = useState('');
@@ -9,6 +10,7 @@ function App() {
   const [printOrder, setPrintOrder] = useState('asc');
   const [pages, setPages] = useState([]);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isWordModalOpen, setIsWordModalOpen] = useState(false);
   const [isDownloadingWord, setIsDownloadingWord] = useState(false);
 
   const handleGenerate = () => {
@@ -39,10 +41,8 @@ function App() {
     window.print();
   };
 
-  const handleDownloadWord = async () => {
+  const handleDownloadWord = async (wordCfg, s, e) => {
     if (isDownloadingWord) return;
-    const s = typeof startNumber === 'string' ? parseInt(startNumber) || 1 : startNumber;
-    const e = typeof endNumber === 'string' ? parseInt(endNumber) || s : endNumber;
     if (!pages || pages.length === 0) {
       alert('Primero genera la vista previa.');
       return;
@@ -50,12 +50,13 @@ function App() {
     setIsDownloadingWord(true);
     try {
       const { generateAndDownloadWord } = await import('./utils/generateWordDoc');
-      await generateAndDownloadWord(pages, pageSize, s, e);
+      await generateAndDownloadWord(pages, pageSize, s, e, wordCfg);
     } catch (err) {
       console.error('Error generando Word:', err);
       alert('Error al generar el Word: ' + (err?.message || err));
     } finally {
       setIsDownloadingWord(false);
+      setIsWordModalOpen(false);
     }
   };
 
@@ -69,6 +70,8 @@ function App() {
 
   return (
     <div className="app-container">
+      {!isWordModalOpen && (
+        <>
       <ConfigPanel 
         startNumber={startNumber}
         setStartNumber={setStartNumber}
@@ -81,12 +84,24 @@ function App() {
         onGenerate={handleGenerate}
         onPrint={handlePrint}
         onClear={handleClear}
-        onDownloadWord={handleDownloadWord}
+        onDownloadWord={() => setIsWordModalOpen(true)}
         isGenerated={isGenerated}
         isDownloadingWord={isDownloadingWord}
       />
       
       <PrintPreview pages={pages} pageSize={pageSize} />
+        </>
+      )}
+
+      <WordConfigModal
+        open={isWordModalOpen}
+        onClose={() => setIsWordModalOpen(false)}
+        start={startNumber}
+        end={endNumber}
+        pageSize={pageSize}
+        generating={isDownloadingWord}
+        onGenerate={handleDownloadWord}
+      />
     </div>
   );
 }
