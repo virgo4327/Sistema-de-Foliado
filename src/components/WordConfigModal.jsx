@@ -156,22 +156,32 @@ function WordPreview({ o, folio }) {
     <div style={{ fontSize: px(p.pt), fontStyle: p.it ? 'italic' : 'normal', fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap' }}>{p.t}</div>
   );
   const linea = (
-    <>
-      <span style={{ fontSize: px(par[0].pt), fontStyle: par[0].it ? 'italic' : 'normal', fontWeight: 700 }}>{par[0].t}</span>
-      <span style={{ fontSize: px(letPt), fontWeight: 700 }}> – </span>
-      <span style={{ fontSize: px(par[1].pt), fontStyle: par[1].it ? 'italic' : 'normal', fontWeight: 700 }}>{par[1].t}</span>
-    </>
+    <div style={{ fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+      <span style={{ fontSize: px(par[0].pt), fontStyle: par[0].it ? 'italic' : 'normal' }}>{par[0].t}</span>
+      <span style={{ fontSize: px(letPt) }}> – </span>
+      <span style={{ fontSize: px(par[1].pt), fontStyle: par[1].it ? 'italic' : 'normal' }}>{par[1].t}</span>
+    </div>
   );
   const inner = dos ? <>{bloque(par[0])}{bloque(par[1])}</> : linea;
   const style = { position: 'absolute', fontWeight: 700, whiteSpace: 'nowrap', fontFamily: 'Cambria, Georgia, serif', color: '#111' };
+
   if (o.orient === 'vertical') {
-    style.top = mm(o.pos === 'top' ? o.sideMm : 10);
-    style.bottom = mm(o.pos === 'bottom' ? o.sideMm : 10);
-    style.display = 'flex';
-    style.flexDirection = 'column';
-    style.justifyContent = o.pos === 'top' ? 'flex-start' : o.pos === 'bottom' ? 'flex-end' : 'center';
     if (o.edge === 'left') style.left = mm(o.edgeMm); else style.right = mm(o.edgeMm);
-    return <div style={{ ...style, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{inner}</div>;
+    if (o.pos === 'top') {
+      style.top = mm(o.sideMm);
+    } else if (o.pos === 'bottom') {
+      style.bottom = mm(o.sideMm);
+    } else {
+      style.top = '50%';
+      style.transform = 'translateY(-50%)';
+    }
+    return (
+      <div style={style}>
+        <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+          {inner}
+        </div>
+      </div>
+    );
   }
 
   if (o.edge === 'top') style.top = mm(o.edgeMm); else style.bottom = mm(o.edgeMm);
