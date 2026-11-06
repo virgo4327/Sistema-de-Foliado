@@ -136,6 +136,7 @@ export default function WordConfigModal({ open, onClose, start, end, pageSize, o
             {generating ? 'Generando Word...' : 'Generar y descargar Word'}
           </button>
         </div>
+        <div style={{ textAlign:'center', marginTop:'12px', fontSize:'11.5px', color:'#5b7367' }}>Derechos reservados 2026</div>
       </div>
     </div>
   );

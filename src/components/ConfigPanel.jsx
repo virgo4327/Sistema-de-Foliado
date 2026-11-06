@@ -107,6 +107,9 @@ const ConfigPanel = ({
           </>
         )}
       </div>
+      <div style={{ textAlign:'center', marginTop:'16px', fontSize:'11.5px', color:'var(--text-dim)' }}>
+        Derechos reservados 2026
+      </div>
     </div>
   );
 };
